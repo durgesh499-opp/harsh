@@ -1,1 +1,67 @@
 
+SELECT
+    TO_CHAR(A.HCSDT_RECEIPT_DATE, 'dd-Mon-YYYY') AS "Receipt Date",
+    (
+        SELECT loc.hcsstr_location_name 
+        FROM hcst_location_mst loc
+        WHERE loc.hcsnum_location_id = (
+            SELECT req.hcsnum_request_from 
+            FROM hcst_request_dtl req
+            WHERE req.hcsnum_request_no = A.hcsnum_request_no 
+              AND req.hcsnum_hospital_code = b.hcsnum_hospital_code 
+              AND req.gnum_isvalid = b.gnum_isvalid
+            LIMIT 1
+        )
+        LIMIT 1
+    ) AS "Dept/Location",
+    (
+        SELECT itm.hststr_item_name 
+        FROM hstt_itembrand_mst itm
+        WHERE itm.hstnum_itembrand_id = b.hstnum_item_id 
+          AND itm.gnum_isvalid = A.gnum_isvalid 
+          AND itm.gnum_hospital_code = 100
+        LIMIT 1
+    ) AS "Packets Name",
+    b.hcsnum_item_qty::CHARACTER VARYING AS "Quantity",
+    ' ' AS "Total",
+    ''::CHARACTER VARYING AS "Col1",
+    ''::CHARACTER VARYING AS "Col2",
+    ''::CHARACTER VARYING AS "Col3",
+    ''::CHARACTER VARYING AS "Col4",
+    ''::CHARACTER VARYING AS "Col5",
+    ''::CHARACTER VARYING AS "Col6",
+    ''::CHARACTER VARYING AS "Col7",
+    ''::CHARACTER VARYING AS "Col8",
+    ''::CHARACTER VARYING AS "Col9",
+    ''::CHARACTER VARYING AS "Col10",
+    ''::CHARACTER VARYING AS "Col11",
+    ''::CHARACTER VARYING AS "Col12",
+    ''::CHARACTER VARYING AS "Col13",
+    ''::CHARACTER VARYING AS "Col14",
+    ''::CHARACTER VARYING AS "Col15",
+    ''::CHARACTER VARYING AS "Col16",
+    ''::CHARACTER VARYING AS "Col17"
+FROM
+    hcst_receipt_dtl A
+JOIN
+    hcst_receipt_item_dtl b
+    ON A.HCSNUM_RECEIPT_NO = B.HCSNUM_RECEIPT_NO
+    AND A.hcsnum_hospital_code = b.hcsnum_hospital_code
+    AND A.gnum_isvalid = b.gnum_isvalid
+WHERE
+    A.gnum_isvalid = 1
+    AND A.hcsnum_hospital_code = 33105
+    AND trunc(A.HCSDT_RECEIPT_DATE) >= ahis_gbl_util.fun_str_date('03-Jun-2024')
+    AND trunc(A.HCSDT_RECEIPT_DATE) <= ahis_gbl_util.fun_str_date('18-Jun-2024')
+    AND (
+        SELECT req.hcsnum_request_from
+        FROM hcst_request_dtl req
+        WHERE req.hcsnum_request_no = A.hcsnum_request_no
+          AND req.hcsnum_hospital_code = b.hcsnum_hospital_code
+          AND req.gnum_isvalid = b.gnum_isvalid
+        LIMIT 1
+    ) = 10000003
+ORDER BY
+    A.HCSDT_RECEIPT_DATE,
+    "Dept/Location",
+    "Packets Name";
